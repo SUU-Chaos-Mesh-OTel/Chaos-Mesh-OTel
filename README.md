@@ -27,11 +27,19 @@
    4. [Results presentation](#84-results-presentation)  
 9. [Using AI in the project](#9-using-ai-in-the-project)  
 10. [Summary – conclusions](#10-summary--conclusions)  
-11. [References](#11-references)  
-
----
+11. [References](#11-references)
 
 ## 1. Introduction
+Chaos Mesh is an open source cloud-native Chaos Engineering platform. It offers various types of fault simulation and has an enormous capability to orchestrate fault scenarios. Using Chaos Mesh, we can conveniently simulate various abnormalities that might occur in reality during the development, testing, and production environments and find potential problems in the system. To lower the threshold for a Chaos Engineering project, Chaos Mesh provides us with a visualization operation. We can easily design our Chaos scenarios on the Web UI and monitor the status of Chaos experiments.
+
+Core strengths of Chaos Mesh:
+* An easy-to-use system: Chaos Mesh makes full use of automation with graphical operations and Kubernetes-based usage.
+* Cloud Native: Chaos Mesh supports Kubernetes environment with its powerful automation ability.
+* Various fault simulation scenarios: Chaos Mesh covers most of the scenarios of basic fault simulation in the distributed testing system.
+* Flexible experiment orchestration capabilities: We can design our own Chaos experiment scenarios on the platform, including multiple mixing experiments and application status checks.
+* High security: Chaos Mesh is designed with multiple layers of security control and provides high security.
+* Easily scalable: It's easy to add new fault test types and functions to Chaos Mesh.
+
 
 ## 2. Theoretical background / technology stack
 
