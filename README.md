@@ -42,6 +42,22 @@ Core strengths of Chaos Mesh:
 
 
 ## 2. Theoretical background / technology stack
+### Fault injections
+Fault injection is the key of Chaos experiments. Chaos Mesh covers a full range of faults that might occur in a distributed system, and provides three comprehensive and fine-grained fault types: basic resource faults, platform faults, and application-layer faults.
+* Basic resource faults:
+  - PodChaos: simulates Pod failures, such as Pod node restart, Pod's persistent unavailability, and certain container failures in a specific Pod.
+  - NetworkChaos: simulates network failures, such as network latency, packet loss, packet disorder, and network partitions.
+  - DNSChaos: simulates DNS failures, such as the parsing failure of DNS domain name and the wrong IP address returned.
+  - HTTPCHaos: simulates HTTP communication failures, such as HTTP communication latency.
+  - StressChaos: simulates CPU race or memory race.
+  - IOChaos: simulates the I/O failure of an application file, such as I/O delays, read and write failures.
+  - TimeChaos: simulates the time jump exception.
+  - KernelChaos: simulates kernel failures, such as an exception of the application memory allocation.
+* Platform faults:
+  - AWSChaos: simulates AWS platform failures, such as the AWS node restart.
+  - GCPChaos: simulates GCP platform failures, such as the GCP node restart.
+* Application faults:
+  - JVMChaos: simulates JVM application failures, such as the function call delay.
 
 ## 3. Case study concept description
 
