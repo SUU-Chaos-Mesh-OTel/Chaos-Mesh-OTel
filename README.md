@@ -14,8 +14,21 @@
 
 1. [Introduction](#1-introduction)  
 2. [Theoretical background / technology stack](#2-theoretical-background--technology-stack)  
+   1. [Fault injections](#fault-injections)  
+   2. [Key Technologies Used](#key-technologies-used)  
 3. [Case study concept description](#3-case-study-concept-description)  
+   1. [Test Scenarios](#test-scenarios)  
+   2. [Observability and Monitoring](#observability-and-monitoring)  
 4. [Solution architecture](#4-solution-architecture)  
+   1. [General Architecture](#41-general-architecture)  
+   2. [Architecture Overview](#42-architecture-overview)  
+   3. [Component Roles and Interactions](#43-component-roles-and-interactions)  
+      - [Minikube (Kubernetes Environment)](#minikube-kubernetes-environment)  
+      - [Chaos Mesh](#chaos-mesh)  
+      - [Prometheus](#prometheus)  
+      - [Grafana](#grafana)  
+      - [Load Generator](#load-generator)  
+      - [Online Boutique Microservices](#online-boutique-microservices)  
 5. [Environment configuration description](#5-environment-configuration-description)  
 6. [Installation method](#6-installation-method)  
 7. [How to reproduce - step by step](#7-how-to-reproduce---step-by-step)  
@@ -27,7 +40,8 @@
    4. [Results presentation](#84-results-presentation)  
 9. [Using AI in the project](#9-using-ai-in-the-project)  
 10. [Summary – conclusions](#10-summary--conclusions)  
-11. [References](#11-references)
+11. [References](#11-references)  
+
 
 ## 1. Introduction
 Chaos Mesh is an open source cloud-native Chaos Engineering platform. It offers various types of fault simulation and has an enormous capability to orchestrate fault scenarios. Using Chaos Mesh, we can conveniently simulate various abnormalities that might occur in reality during the development, testing, and production environments and find potential problems in the system. To lower the threshold for a Chaos Engineering project, Chaos Mesh provides us with a visualization operation. We can easily design our Chaos scenarios on the Web UI and monitor the status of Chaos experiments.
@@ -118,8 +132,64 @@ The main objective is to analyze how each fault scenario affects the performance
 
 
 ## 4. Solution architecture
-**Online Boutique** is composed of 11 microservices written in different
-languages that talk to each other over gRPC.
+
+### 4.1 General Architecture
+[![General architecture](/docs/img/otel.png)](/docs/img/otel.png)
+
+The solution is designed to run in a **local Kubernetes cluster**, provisioned using **Minikube**, and integrates various components including microservices, observability tooling, and fault injection infrastructure. This architecture emulates a production-grade environment on a local machine for the purpose of experimentation, validation, and educational demonstration.
+
+### 4.2 Architecture Overview
+
+The core components of the architecture include:
+
+* **Minikube** — Local Kubernetes environment simulating a production-like cluster.
+* **Online Boutique** — A cloud-native microservices demo application consisting of 11 interconnected services.
+* **Chaos Mesh** — A chaos engineering toolset used to inject controlled faults into the system.
+* **Prometheus** — A metrics collection and time-series storage system.
+* **Grafana** — A visualization and dashboarding tool for Prometheus data.
+* **Load Generator** — A component of Online Boutique that simulates realistic traffic patterns by generating HTTP requests to the `frontend` service.
+
+### 4.3 Component Roles and Interactions
+
+#### **Minikube (Kubernetes Environment)**
+
+* Provides a local container-orchestrated environment.
+* Hosts all application workloads including Online Boutique, Chaos Mesh, and observability tools.
+* Enables testing of service orchestration, fault tolerance, and pod lifecycle management.
+
+#### **Chaos Mesh**
+
+* Deployed into the Minikube cluster using Helm.
+* Includes a dashboard for visual scenario creation and a set of CRDs and controllers for fault injection.
+* Targets specific pods or services within Online Boutique for chaos experiments (e.g., network delays, pod terminations, CPU stress).
+
+#### **Prometheus**
+
+* Automatically scrapes metrics from Online Boutique services and Chaos Mesh components.
+* Stores time-series metrics for resource usage, HTTP/gRPC performance, error rates, etc.
+* Also collects Kubernetes-specific metrics (e.g., pod restarts, CPU usage).
+
+#### **Grafana**
+
+* Connects to Prometheus as a data source.
+* Visualizes key metrics across services and the cluster.
+* Dashboards include:
+
+  * Service-level latency and error rates
+  * CPU and memory consumption
+  * Pod availability and restart frequency
+  * Specific Chaos Mesh experiment timelines and impact
+
+#### **Load Generator**
+
+* Continuously sends requests to the `frontend` service, simulating real user interactions.
+* Ensures that there is live traffic during chaos scenarios to observe system degradation and recovery.
+
+#### **Online Boutique Microservices**
+
+* Consists of 11 microservices that represent a simplified e-commerce platform.
+* Each service communicates primarily over **gRPC**, exposing realistic network traffic and dependencies.
+* The `frontend` service is the entry point for users and the target for load generation.
 
 [![Architecture of
 microservices](/docs/img/architecture-diagram.png)](/docs/img/architecture-diagram.png)
