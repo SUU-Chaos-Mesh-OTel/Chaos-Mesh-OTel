@@ -79,6 +79,44 @@ Fault injection is the key of Chaos experiments. Chaos Mesh covers a full range 
 
 ## 3. Case study concept description
 
+The goal of this case study is to demonstrate the practical usage of Chaos Mesh in a Kubernetes environment to simulate various fault scenarios, evaluate system resilience, and observe the behavior of microservices under stress. We aim to showcase how chaos engineering principles can be applied to a real-world application — in this case, the *Online Boutique* microservices demo — while collecting and visualizing telemetry data using observability tools such as Prometheus and Grafana.
+
+This proof of concept focuses on running controlled chaos experiments across four distinct fault categories provided by Chaos Mesh:
+
+### Test Scenarios
+
+1. **Pod Fault Injection**
+   - **Objective:** Simulate the crash or eviction of critical pods to test how the system recovers and how quickly Kubernetes reschedules the affected pods.
+   - **Example:** Terminate the `checkoutservice` or `frontend` pod and monitor user experience, recovery time, and service availability.
+   - **Expected Outcome:** Kubernetes should reschedule the pod. Dashboards should show brief unavailability or latency spikes.
+
+2. **Network Fault Injection**
+   - **Objective:** Introduce artificial network issues such as latency, packet loss, or partitioning to observe the impact on inter-service communication.
+   - **Example:** Add 1000ms latency between `frontend` and `productcatalogservice`.
+   - **Expected Outcome:** Increase in response times, potential timeouts, visible in Grafana panels showing request durations and error rates.
+
+3. **Stress Testing (CPU & Memory)**
+   - **Objective:** Apply high CPU or memory load to simulate resource exhaustion and observe system degradation or auto-scaling responses.
+   - **Example:** Apply CPU stress on the `recommendationservice` to consume all available cores for 60 seconds.
+   - **Expected Outcome:** Service latency increases, possible throttling, potential pod restarts. Metrics should indicate high CPU usage and degraded performance.
+
+4. **HTTP Fault Injection**
+   - **Objective:** Introduce artificial HTTP response delays or errors to verify error-handling logic and system robustness.
+   - **Example:** Inject 500ms delay and 10% HTTP 500 responses to `adservice`.
+   - **Expected Outcome:** Increased error rate and degraded user experience; dashboards reflect anomalies in HTTP metrics (e.g., 5xx rate spike).
+
+### Observability and Monitoring
+
+Each test will be run with telemetry data collection enabled. Prometheus will scrape metrics from the Online Boutique services and Chaos Mesh itself. These metrics will be visualized in Grafana dashboards, focusing on:
+- Request/response latency
+- CPU/memory usage
+- Pod availability status
+- Error rates
+- Service-level indicators (SLIs)
+
+The main objective is to analyze how each fault scenario affects the performance and stability of the system and how quickly the system returns to normal operation. This approach highlights the importance of chaos engineering in identifying potential weaknesses before they occur in production.
+
+
 ## 4. Solution architecture
 **Online Boutique** is composed of 11 microservices written in different
 languages that talk to each other over gRPC.
