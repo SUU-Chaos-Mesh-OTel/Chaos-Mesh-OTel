@@ -79,9 +79,7 @@ Fault injection is the key of Chaos experiments. Chaos Mesh covers a full range 
 
 ## 3. Case study concept description
 
-
-## Architecture
-
+## 4. Solution architecture
 **Online Boutique** is composed of 11 microservices written in different
 languages that talk to each other over gRPC.
 
@@ -102,10 +100,6 @@ microservices](/docs/img/architecture-diagram.png)](/docs/img/architecture-diagr
 | [recommendationservice](/src/recommendationservice) | Python        | Recommends other products based on what's given in the cart.                                                                      |
 | [adservice](/src/adservice)                         | Java          | Provides text ads based on given context words.                                                                                   |
 | [loadgenerator](/src/loadgenerator)                 | Python/Locust | Continuously sends requests imitating realistic user shopping flows to the frontend.   
-
-
-
-## 4. Solution architecture
 
 ## 5. Environment configuration description
 
