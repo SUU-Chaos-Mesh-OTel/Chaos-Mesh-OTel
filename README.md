@@ -211,7 +211,153 @@ microservices](/docs/img/architecture-diagram.png)](/docs/img/architecture-diagr
 
 ## 5. Environment configuration description
 
+### Purpose of Using Minikube
+
+Minikube is a local Kubernetes distribution designed for development and testing purposes. It allows users to create lightweight Kubernetes clusters directly on a local machine. In this project, Minikube was chosen to host a simulated microservices-based application and provide an isolated, reproducible testing ground for failure injection using Chaos Mesh.
+
+Its main role is to:
+
+- Simplify deployment and orchestration of multiple containerized services.
+- Provide a local platform to simulate realistic production-like conditions.
+- Enable testing of fault tolerance strategies without external infrastructure dependencies.
+
+### Role of Microservices-Based Application
+
+To study system robustness under adverse conditions, a realistic application architecture is required. The **Google Cloud Online Boutique** demo — a cloud-native microservices application — was used as the system under test. It simulates an online store composed of multiple interdependent services, including frontend, product catalog, cart, checkout, and payment services.
+
+The purpose of this application in the environment is to:
+
+- Represent a complex, stateful, and realistic production workload.
+- Demonstrate how cascading failures and bottlenecks occur between services.
+- Serve as a testbed for policy learning under system stress (e.g., simulating partial lockdowns through resource constraints or failures).
+
+### Use of Chaos Mesh
+
+**Chaos Mesh** is a powerful chaos engineering platform designed to introduce failures into Kubernetes-based systems. It enables the simulation of various fault types (e.g., pod failure, network delay, disk I/O error) to evaluate the resilience and recovery behavior of applications.
+
+In this setup, Chaos Mesh is used to:
+
+- Inject controlled failures into specific microservices.
+- Test the environment's fault tolerance and self-healing properties.
+- Provide a basis for reinforcement learning agents to observe state transitions resulting from system perturbations.
+
+Pod failure scenarios were used to emulate real-world crashes, service restarts, or node outages. These experiments helped evaluate how well the system recovers and whether DQN-based policies can anticipate and mitigate such disruptions.
+
+### Role of Istio
+
+**Istio** is a service mesh platform that provides traffic control, observability, and security between microservices. By intercepting and managing all service-to-service communication, Istio allows fine-grained control over network behavior, making it ideal for chaos engineering and monitoring.
+
+In this project, Istio was employed to:
+
+- Monitor and collect metrics (e.g., request latency, error rate) across services.
+- Automatically inject sidecars (Envoy proxies) for advanced observability.
+- Facilitate tracing and visualization of traffic flow during and after failure events.
+
+Its integration ensures that policy decisions made by the reinforcement learning agent can be informed by precise system-level feedback.
+
+### Monitoring Stack: Prometheus and Grafana
+
+To assess the impact of chaos experiments and evaluate learned policies, detailed metrics are required. **Prometheus** was used as the metrics collection system, and **Grafana** provided real-time dashboards for visualization.
+
+These tools were used to:
+
+- Collect quantitative data about system health, resource usage, and failure recovery.
+- Visualize key metrics that serve as reward signals for the DQN agent.
+- Enable manual inspection of system behavior during experiments.
+
+Together, they form the observability layer of the environment, providing insight into how each failure impacts the system and how policies affect stability.
+
+### Summary
+
+The environment configuration combines Minikube (for local orchestration), Chaos Mesh (for failure injection), Istio (for service control), and Prometheus/Grafana (for monitoring). The Google microservices demo provides a realistic workload. This setup enables safe, repeatable experiments to test the impact of failures and explore how Deep Q-Learning can optimize policy responses in dynamic and uncertain environments.
+
+
+This section describes the setup and configuration steps taken to prepare the experimental environment for Chaos Mesh experiments.
+
 ## 6. Installation method
+
+
+### Minikube Setup
+
+To simulate a local Kubernetes environment, **Minikube** was installed and configured using the following steps:
+
+```bash
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+minikube start
+eval $(minikube docker-env)
+```
+
+These steps enabled the use of Minikube's internal Docker daemon, allowing built images to be used directly by Kubernetes without pushing them to an external registry
+
+### Chaos Mesh Installation
+
+To simulate failures, Chaos Mesh was installed using Helm:
+
+1. Install Helm:
+  ```
+  curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+  chmod 700 get_helm.sh
+  ./get_helm.sh
+  ```
+2. Add the Chaos Mesh Helm chart:
+```
+helm repo add chaos-mesh https://charts.chaos-mesh.org
+```
+3. Create a dedicated namespace and install Chaos Mesh:
+```
+kubectl create ns chaos-mesh
+helm install chaos-mesh chaos-mesh/chaos-mesh -n=chaos-mesh --set dashboard.securityMode=false --version 2.7.2
+
+```
+`securityMode=false` was used to disable the safe mode
+
+
+### Istio and Monitoring Setup
+
+To enable observability and traffic control, Istio was installed along with Grafana and Prometheus:
+
+Istio install:
+
+```
+curl -L https://istio.io/downloadIstio | sh -
+cd istio-1.26.0
+export PATH=$PWD/bin:$PATH
+stioctl manifest apply --set profile=demo
+```
+
+Enable automatic sidecar injection in the default namespace:
+
+```
+kubectl label namespace default istio-injection=enabled
+
+```
+
+To enable observability and traffic control, Istio was installed along with Grafana and Prometheus:
+```
+
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.21/samples/addons/grafana.yaml
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.21/samples/addons/prometheus.yaml
+```
+
+You can access the Grafana dashboard for monitoring with:
+```
+istioctl dashboard grafana
+
+```
+
+### Application Under Chaos Test
+
+To create a realistic microservices environment, the Google Cloud Microservices Demo was used:
+
+```
+git clone https://github.com/GoogleCloudPlatform/microservices-demo.git
+cd microservices-demo/release/
+kubectl apply -f kubernetes-manifests.yaml
+```
+
+This application includes multiple services (e.g., frontend, product catalog, cart service), which makes it a good target for chaos experiments.
+
+
 
 ## 7. How to reproduce - step by step
 
