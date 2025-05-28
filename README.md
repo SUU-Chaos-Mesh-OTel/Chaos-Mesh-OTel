@@ -634,6 +634,7 @@ HTTP Failure observed on checkout service using Grafana
 
 
 ## 9. Using AI in the project
+In our project, we utilized ChatGPT as a key tool for generating, refining, and maintaining documentation. By leveraging its advanced natural language processing capabilities, we significantly improved the efficiency and consistency of our documentation process.
 
 ## 10. Summary – conclusions
 The Chaos-Mesh-OTel project successfully demonstrated the application of chaos engineering techniques in a Kubernetes environment using Chaos Mesh, OpenTelemetry, Prometheus, and Grafana. Our key findings and conclusions are as follows:
