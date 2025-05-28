@@ -479,18 +479,31 @@ To simulate realistic traffic, the load-generator component was used to continuo
 
 ### 8.3 Execution procedure
 #### Pod Failure
-
 To simulate failure and test service resilience, a Chaos Mesh experiment was conducted. Specifically, the product-catalog pod was deliberately terminated via a pod-kill fault injection:
 
-1. The Chaos Mesh experiment was defined to target the product-catalog pod.
+1. The Chaos Mesh experiment was defined using the following YAML manifest:
+```
+kind: PodChaos
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  namespace: default
+  name: pod-fault-kill-experiment
+spec:
+  selector:
+    namespaces:
+      - default
+    labelSelectors:
+      app.kubernetes.io/component: product-catalog
+  mode: all
+  action: pod-kill
+  gracePeriod: 0
 
-2. The experiment forcibly terminated the pod at a specified time.
+```
+2. The experiment forcibly terminated all pods matching the selector for the product-catalog component at a specified time.
 
-3. Kubernetes automatically recreated the pod, as confirmed by the kubectl get pods output, which shows the pod had been restarted 43 seconds before the snapshot was taken.
 
 This allowed us to observe system behavior during an unexpected crash and recovery of a critical component.
 
-[![Pod Failure](/docs/img/pod-kill.png)](/docs/img/pod-kill.png)
 
 ### 8.4 Results presentation
 #### Pod Failure
@@ -504,6 +517,10 @@ The impact of the pod failure was observed through the monitoring tools:
 3. The RESTARTS column in the kubectl output confirms that no other pods were restarted during this test, demonstrating localized failure handling.
 
 This experiment validated that the microservices system can gracefully recover from a failure in one of its components. Kubernetes' built-in self-healing mechanism ensured minimal disruption and full service recovery.
+
+[![Pod Failure](/docs/img/pod-kill.png)](/docs/img/pod-kill.png)
+
+Pod Failure Error Span observed on recommendation service using Grafana
 
 [![Pod Failure error span](/docs/img/pod-kill-2.png)](/docs/img/pod-kill-2.png)
 
