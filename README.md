@@ -93,7 +93,7 @@ Fault injection is the key of Chaos experiments. Chaos Mesh covers a full range 
 
 ## 3. Case study concept description
 
-The goal of this case study is to demonstrate the practical usage of Chaos Mesh in a Kubernetes environment to simulate various fault scenarios, evaluate system resilience, and observe the behavior of microservices under stress. We aim to showcase how chaos engineering principles can be applied to a real-world application — in this case, the *Online Boutique* microservices demo — while collecting and visualizing telemetry data using observability tools such as Prometheus and Grafana.
+The goal of this case study is to demonstrate the practical usage of **Chaos Mesh** in a Kubernetes environment to simulate various fault scenarios, evaluate system resilience, and observe the behavior of the **OpenTelemetry Demo – _Astronomy Shop_** microservices application under stress. We aim to showcase how chaos‑engineering principles can be applied to a real-world application while collecting and visualizing telemetry data using the **OpenTelemetry Collector**, **Prometheus**, and **Grafana**.
 
 This proof of concept focuses on running controlled chaos experiments across four distinct fault categories provided by Chaos Mesh:
 
@@ -101,27 +101,28 @@ This proof of concept focuses on running controlled chaos experiments across fou
 
 1. **Pod Fault Injection**
    - **Objective:** Simulate the crash or eviction of critical pods to test how the system recovers and how quickly Kubernetes reschedules the affected pods.
-   - **Example:** Terminate the `checkoutservice` or `frontend` pod and monitor user experience, recovery time, and service availability.
+   - **Example:** Terminate the `checkout` or `frontend` pod and monitor user experience, recovery time, and service availability.
    - **Expected Outcome:** Kubernetes should reschedule the pod. Dashboards should show brief unavailability or latency spikes.
 
 2. **Network Fault Injection**
    - **Objective:** Introduce artificial network issues such as latency, packet loss, or partitioning to observe the impact on inter-service communication.
-   - **Example:** Add 1000ms latency between `frontend` and `productcatalogservice`.
+   - **Example:** Add 1000 ms latency between `frontend` and `productcatalog` services.
    - **Expected Outcome:** Increase in response times, potential timeouts, visible in Grafana panels showing request durations and error rates.
 
 3. **Stress Testing (CPU & Memory)**
    - **Objective:** Apply high CPU or memory load to simulate resource exhaustion and observe system degradation or auto-scaling responses.
-   - **Example:** Apply CPU stress on the `recommendationservice` to consume all available cores for 60 seconds.
+   - **Example:** Apply CPU stress on the `recommendation` service to consume all available cores for 60 seconds.
    - **Expected Outcome:** Service latency increases, possible throttling, potential pod restarts. Metrics should indicate high CPU usage and degraded performance.
 
 4. **HTTP Fault Injection**
    - **Objective:** Introduce artificial HTTP response delays or errors to verify error-handling logic and system robustness.
-   - **Example:** Inject 500ms delay and 10% HTTP 500 responses to `adservice`.
+   - **Example:** Inject 500 ms delay and 10% HTTP 500 responses to the `ad` service.
    - **Expected Outcome:** Increased error rate and degraded user experience; dashboards reflect anomalies in HTTP metrics (e.g., 5xx rate spike).
 
 ### Observability and Monitoring
 
-Each test will be run with telemetry data collection enabled. Prometheus will scrape metrics from the Online Boutique services and Chaos Mesh itself. These metrics will be visualized in Grafana dashboards, focusing on:
+Each test will be executed with telemetry data collection enabled. The **OpenTelemetry Collector** will export traces, metrics, and logs from the Astronomy Shop services and Chaos Mesh. **Prometheus** will scrape the Collector’s Prometheus exporter endpoints, and **Grafana** dashboards will visualize:
+
 - Request/response latency
 - CPU/memory usage
 - Pod availability status
@@ -143,18 +144,19 @@ The solution is designed to run in a **local Kubernetes cluster**, provisioned u
 The core components of the architecture include:
 
 * **Minikube** — Local Kubernetes environment simulating a production-like cluster.
-* **Online Boutique** — A cloud-native microservices demo application consisting of 11 interconnected services.
-* **Chaos Mesh** — A chaos engineering toolset used to inject controlled faults into the system.
-* **Prometheus** — A metrics collection and time-series storage system.
-* **Grafana** — A visualization and dashboarding tool for Prometheus data.
-* **Load Generator** — A component of Online Boutique that simulates realistic traffic patterns by generating HTTP requests to the `frontend` service.
+* **OpenTelemetry Demo (Astronomy Shop)** — A polyglot e-commerce microservices application (~20 services) built to showcase end-to-end observability with traces, metrics, and logs.
+* **Chaos Mesh** — A chaos-engineering toolset used to inject controlled faults into the system.
+* **OpenTelemetry Collector** — Unified pipeline exporting telemetry from all services (and Chaos Mesh) to back-ends.
+* **Prometheus** — Scrapes the Collector’s Prometheus exporter for metrics and stores time-series data.
+* **Grafana** — Visualises Prometheus and trace data for rapid insight.
+* **Load Generator** — The `loadgenerator` service, which produces realistic traffic against the public `frontend` entry point.
 
 ### 4.3 Component Roles and Interactions
 
 #### **Minikube (Kubernetes Environment)**
 
 * Provides a local container-orchestrated environment.
-* Hosts all application workloads including Online Boutique, Chaos Mesh, and observability tools.
+* Hosts all application workloads including Astronomy Shop microservices, Chaos Mesh, and observability tools.
 * Enables testing of service orchestration, fault tolerance, and pod lifecycle management.
 
 #### **Chaos Mesh**
@@ -181,33 +183,148 @@ The core components of the architecture include:
   * Specific Chaos Mesh experiment timelines and impact
 
 #### **Load Generator**
-
-* Continuously sends requests to the `frontend` service, simulating real user interactions.
+* Continuously issues HTTP requests to the public `frontend-proxy`, emulating realistic shopping journeys so that faults have observable impact.
 * Ensures that there is live traffic during chaos scenarios to observe system degradation and recovery.
 
-#### **Online Boutique Microservices**
+#### **OpenTelemetry Demo Microservices**
+* Comprises ~20 microservices representing an astronomy-themed e-commerce store.
+* Mix of HTTP, gRPC, and Kafka event flows; polyglot tech stack demonstrates distributed-tracing across languages.
+* `frontend-proxy` (Envoy) is the single ingress point for users and for the load generator.
 
-* Consists of 11 microservices that represent a simplified e-commerce platform.
-* Each service communicates primarily over **gRPC**, exposing realistic network traffic and dependencies.
-* The `frontend` service is the entry point for users and the target for load generation.
+```mermaid
+graph TD
+subgraph Service Diagram
+accounting(Accounting):::dotnet
+ad(Ad):::java
+cache[(Cache<br/>&#40Valkey&#41)]
+cart(Cart):::dotnet
+checkout(Checkout):::golang
+currency(Currency):::cpp
+email(Email):::ruby
+flagd(Flagd):::golang
+flagd-ui(Flagd-ui):::typescript
+fraud-detection(Fraud Detection):::kotlin
+frontend(Frontend):::typescript
+frontend-proxy(Frontend Proxy <br/>&#40Envoy&#41):::cpp
+image-provider(Image Provider <br/>&#40nginx&#41):::cpp
+load-generator([Load Generator]):::python
+payment(Payment):::javascript
+product-catalog(Product Catalog):::golang
+quote(Quote):::php
+recommendation(Recommendation):::python
+shipping(Shipping):::rust
+queue[(queue<br/>&#40Kafka&#41)]:::java
+react-native-app(React Native App):::typescript
 
-[![Architecture of
-microservices](/docs/img/architecture-diagram.png)](/docs/img/architecture-diagram.png)
+ad ---->|gRPC| flagd
 
+checkout -->|gRPC| cart
+checkout --->|TCP| queue
+cart --> cache
+cart -->|gRPC| flagd
 
-| Service                                              | Language      | Description                                                                                                                       |
-| ---------------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| [frontend](/src/frontend)                           | Go            | Exposes an HTTP server to serve the website. Does not require signup/login and generates session IDs for all users automatically. |
-| [cartservice](/src/cartservice)                     | C#            | Stores the items in the user's shopping cart in Redis and retrieves it.                                                           |
-| [productcatalogservice](/src/productcatalogservice) | Go            | Provides the list of products from a JSON file and ability to search products and get individual products.                        |
-| [currencyservice](/src/currencyservice)             | Node.js       | Converts one money amount to another currency. Uses real values fetched from European Central Bank. It's the highest QPS service. |
-| [paymentservice](/src/paymentservice)               | Node.js       | Charges the given credit card info (mock) with the given amount and returns a transaction ID.                                     |
-| [shippingservice](/src/shippingservice)             | Go            | Gives shipping cost estimates based on the shopping cart. Ships items to the given address (mock)                                 |
-| [emailservice](/src/emailservice)                   | Python        | Sends users an order confirmation email (mock).                                                                                   |
-| [checkoutservice](/src/checkoutservice)             | Go            | Retrieves user cart, prepares order and orchestrates the payment, shipping and the email notification.                            |
-| [recommendationservice](/src/recommendationservice) | Python        | Recommends other products based on what's given in the cart.                                                                      |
-| [adservice](/src/adservice)                         | Java          | Provides text ads based on given context words.                                                                                   |
-| [loadgenerator](/src/loadgenerator)                 | Python/Locust | Continuously sends requests imitating realistic user shopping flows to the frontend.   
+checkout -->|gRPC| shipping
+checkout -->|gRPC| payment
+checkout --->|HTTP| email
+checkout -->|gRPC| currency
+checkout -->|gRPC| product-catalog
+
+fraud-detection -->|gRPC| flagd
+
+frontend -->|gRPC| ad
+frontend -->|gRPC| cart
+frontend -->|gRPC| checkout
+frontend ---->|gRPC| currency
+frontend ---->|gRPC| recommendation
+frontend -->|gRPC| product-catalog
+
+frontend-proxy -->|gRPC| flagd
+frontend-proxy -->|HTTP| frontend
+frontend-proxy -->|HTTP| flagd-ui
+frontend-proxy -->|HTTP| image-provider
+
+Internet -->|HTTP| frontend-proxy
+
+load-generator -->|HTTP| frontend-proxy
+
+payment -->|gRPC| flagd
+
+queue -->|TCP| accounting
+queue -->|TCP| fraud-detection
+
+recommendation -->|gRPC| product-catalog
+recommendation -->|gRPC| flagd
+
+shipping -->|HTTP| quote
+
+react-native-app -->|HTTP| frontend-proxy
+end
+
+classDef dotnet fill:#178600,color:white;
+classDef cpp fill:#f34b7d,color:white;
+classDef golang fill:#00add8,color:black;
+classDef java fill:#b07219,color:white;
+classDef javascript fill:#f1e05a,color:black;
+classDef kotlin fill:#560ba1,color:white;
+classDef php fill:#4f5d95,color:white;
+classDef python fill:#3572A5,color:white;
+classDef ruby fill:#701516,color:white;
+classDef rust fill:#dea584,color:black;
+classDef typescript fill:#e98516,color:black;
+```
+
+```mermaid
+graph TD
+subgraph Service Legend
+  dotnetsvc(.NET):::dotnet
+  cppsvc(C++):::cpp
+  golangsvc(Go):::golang
+  javasvc(Java):::java
+  javascriptsvc(JavaScript):::javascript
+  kotlinsvc(Kotlin):::kotlin
+  phpsvc(PHP):::php
+  pythonsvc(Python):::python
+  rubysvc(Ruby):::ruby
+  rustsvc(Rust):::rust
+  typescriptsvc(TypeScript):::typescript
+end
+
+classDef dotnet fill:#178600,color:white;
+classDef cpp fill:#f34b7d,color:white;
+classDef golang fill:#00add8,color:black;
+classDef java fill:#b07219,color:white;
+classDef javascript fill:#f1e05a,color:black;
+classDef kotlin fill:#560ba1,color:white;
+classDef php fill:#4f5d95,color:white;
+classDef python fill:#3572A5,color:white;
+classDef ruby fill:#701516,color:white;
+classDef rust fill:#dea584,color:black;
+classDef typescript fill:#e98516,color:black;
+```
+
+| Service / Component                                 | Language / Tech | Purpose (Astronomy Shop)                                                                                          |
+| --------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **frontend**                                        | TypeScript/React| Browser UI; renders product pages and checks out via gRPC calls routed through Envoy.                              |
+| **frontend-proxy (Envoy)**                          | C++             | Edge proxy (HTTP → gRPC) injecting trace headers, RBAC, retries, and metrics.                                      |
+| **product-catalog**                                 | Go              | Supplies product data (astronomy gear) with basic search & lookup endpoints.                                       |
+| **cart**                                            | C# (.NET)       | Persists users’ shopping carts in **Valkey** (Redis-compatible) and exposes gRPC API.                              |
+| **checkout**                                        | Go              | Orchestrates cart retrieval, pricing, payment, shipping, email, and publishes order events to Kafka.               |
+| **payment**                                         | Node.js         | Mock card-payment gateway; returns transaction IDs.                                                                |
+| **currency**                                        | C++             | Converts prices to user-preferred currency based on ECB rates.                                                     |
+| **shipping**                                        | Rust            | Calculates shipping costs and confirms dispatch; queries **quote** for insurance.                                  |
+| **recommendation**                                  | Python          | Suggests additional astronomy products based on current cart.                                                      |
+| **ad**                                              | Java            | Delivers contextual text ads for product pages.                                                                    |
+| **email**                                           | Ruby            | Sends order-confirmation emails (mock).                                                                            |
+| **flagd**                                           | Go              | Feature-flag daemon; allows dynamic toggling of experiments and service behaviour.                                 |
+| **flagd-ui**                                        | TypeScript/Vue  | Simple UI for viewing & flipping feature flags via flagd’s REST/gRPC API.                                          |
+| **fraud-detection**                                 | Kotlin          | Consumes checkout events from Kafka to detect suspicious transactions.                                             |
+| **accounting**                                      | C# (.NET)       | Subscribes to order events, records them in an accounting ledger.                                                  |
+| **quote**                                           | PHP             | Returns insurance quotes used by Shipping for high-value items.                                                    |
+| **image-provider (nginx)**                          | C++             | Serves static product and ad images.                                                                               |
+| **queue (Kafka)**                                   | Java            | Event backbone connecting Checkout → Accounting / Fraud-Detection.                                                 |
+| **cache (Valkey/Redis)**                            | C              | In-memory store backing Cart service.                                                                              |
+| **loadgenerator**                                   | Python / Locust | Generates continuous, trace-instrumented traffic to exercise the entire application.                              |
+   
 
 ## 5. Environment configuration description
 
@@ -223,7 +340,7 @@ Its main role is to:
 
 ### Role of Microservices-Based Application
 
-To study system robustness under adverse conditions, a realistic application architecture is required. The **Google Cloud Online Boutique** demo — a cloud-native microservices application — was used as the system under test. It simulates an online store composed of multiple interdependent services, including frontend, product catalog, cart, checkout, and payment services.
+To study system robustness under adverse conditions, a realistic application architecture is required. The **OpenTelemetry Astronomy Shop Demo** — a cloud-native microservices application — was used as the system under test. It simulates an online store composed of multiple interdependent services, including frontend, product catalog, cart, checkout, recommendation, and payment services.
 
 The purpose of this application in the environment is to:
 
@@ -243,17 +360,6 @@ In this setup, Chaos Mesh is used to:
 
 Pod failure scenarios were used to emulate real-world crashes, service restarts, or node outages. These experiments helped evaluate how well the system recovers and whether DQN-based policies can anticipate and mitigate such disruptions.
 
-### Role of Istio
-
-**Istio** is a service mesh platform that provides traffic control, observability, and security between microservices. By intercepting and managing all service-to-service communication, Istio allows fine-grained control over network behavior, making it ideal for chaos engineering and monitoring.
-
-In this project, Istio was employed to:
-
-- Monitor and collect metrics (e.g., request latency, error rate) across services.
-- Automatically inject sidecars (Envoy proxies) for advanced observability.
-- Facilitate tracing and visualization of traffic flow during and after failure events.
-
-Its integration ensures that policy decisions made by the reinforcement learning agent can be informed by precise system-level feedback.
 
 ### Monitoring Stack: Prometheus and Grafana
 
@@ -269,7 +375,7 @@ Together, they form the observability layer of the environment, providing insigh
 
 ### Summary
 
-The environment configuration combines Minikube (for local orchestration), Chaos Mesh (for failure injection), Istio (for service control), and Prometheus/Grafana (for monitoring). The Google microservices demo provides a realistic workload. This setup enables safe, repeatable experiments to test the impact of failures and explore how Deep Q-Learning can optimize policy responses in dynamic and uncertain environments.
+The environment configuration combines Minikube (for local orchestration), Chaos Mesh (for failure injection), and Prometheus/Grafana (for monitoring). The Google microservices demo provides a realistic workload. This setup enables safe, repeatable experiments to test the impact of failures and explore how Deep Q-Learning can optimize policy responses in dynamic and uncertain environments.
 
 
 This section describes the setup and configuration steps taken to prepare the experimental environment for Chaos Mesh experiments.
