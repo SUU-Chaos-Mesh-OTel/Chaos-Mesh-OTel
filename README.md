@@ -655,36 +655,20 @@ Network Failure Error Span observed on checkout service using Grafana
 ## 10. Summary – conclusions
 The Chaos-Mesh-OTel project successfully demonstrated the application of chaos engineering techniques in a Kubernetes environment using Chaos Mesh, OpenTelemetry, Prometheus, and Grafana. Our key findings and conclusions are as follows:
 
-1. Chaos Engineering Validated as a Powerful Testing Method
-Controlled fault injection (e.g., pod crashes, network issues, CPU stress) enabled us to proactively uncover weaknesses in microservice interdependencies, autoscaling behaviors, and resiliency mechanisms that traditional testing often overlooks.
+- **Chaos engineering proves its worth**
+  - Injecting pod crashes, CPU stress and network partitions surfaced hidden dependencies and performance cliffs that conventional tests overlook.
+  - Unified traces, metrics and logs (OpenTelemetry → Prometheus → Grafana) let us pinpoint exactly when and where latency and error rates spiked.
 
-2. Observability is Crucial for Insightful Analysis
-Leveraging OpenTelemetry allowed us to collect unified traces, metrics, and logs from across the distributed system. When combined with Prometheus and Grafana, this enabled real-time visibility into the impact of faults and system recovery processes.
+- **Kubernetes heals—but sometimes too slowly**. Self-healing restarts worked, yet recovery lag showed we should retune readiness/liveness probes, HPA thresholds and resource requests/limits.
 
-3. The Astronomy Shop Provided a Realistic Testbed
-The polyglot nature and microservice architecture of the Astronomy Shop application, alongside its integration with OpenTelemetry and load generation, made it an ideal environment to test both technical resilience and user-facing performance under chaos scenarios.
+- **Chaos Mesh simplifies the craft**
+  - CRD-based workflows plus a visual UI made it easy to script everything from one-off pod kills to multi-step network partitions.
+  - Wiring these workflows into CI/CD would turn one-time experiments into continuous resilience checks.
 
-4. Fault Injection Effects Were Measurable and Traceable
-Each test scenario produced observable changes in latency, error rates, or system behavior. For example, CPU stress resulted in throttled requests and delayed responses, while pod crashes led to brief unavailability until Kubernetes rescheduled the services.
+- **Realistic, but not full-scale, testbed**
+  - The polyglot Astronomy Shop microservices with synthetic load felt production-like, so findings generalize.
+  - Minikube can’t mimic node-level or cloud-provider failures; a staging cluster closer to production is the logical next step.
 
-5. Recovery Mechanisms Worked but Not Always Optimally
-Kubernetes handled pod restarts effectively, but in some cases recovery time was longer than expected. This highlights opportunities to tune readiness/liveness probes, autoscaling thresholds, and resource requests/limits.
-
-6. Chaos Mesh Workflow Simplifies Experiment Design
-The visual interface and CRD-based architecture of Chaos Mesh made it easy to define and manage experiments, from simple pod disruptions to more complex network partition simulations.
-
-7. Limitations of Local Testing Noted
-While Minikube allowed rapid local iteration, some faults (e.g., node-level failures or cloud-specific disruptions) could not be fully reproduced. A production-like staging environment would be better for testing platform-level resilience.
-
-8. AI Augmentation Potential Identified
-Although not deeply integrated, initial experiments using AI (e.g., for anomaly detection or log classification) showed promise in accelerating root cause analysis during chaos events. This area warrants further exploration.
-
-9. Chaos Testing Should Be Continuous
-One-time experiments are insightful, but the true value of chaos engineering lies in continuous validation. Integrating these experiments into CI/CD pipelines would ensure long-term system robustness.
-
-10. Educational and Practical Value Demonstrated
-Beyond its technical outcomes, the project proved effective in increasing our understanding of Kubernetes-based systems, observability tooling, and real-world challenges in distributed systems resilience.
-
-In summary, the Chaos-Mesh-OTel project validates that injecting controlled failures into cloud-native applications, coupled with robust observability, significantly improves the ability to design, operate, and scale resilient systems.
+- **AI assistance shows promise**. Early anomaly-detection and log-classification tests sped up root-cause analysis—an avenue worth deeper exploration.
 
 ## 11. References
