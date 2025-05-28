@@ -482,7 +482,7 @@ To simulate realistic traffic, the load-generator component was used to continuo
 To simulate failure and test service resilience, a Chaos Mesh experiment was conducted. Specifically, the product-catalog pod was deliberately terminated via a pod-kill fault injection:
 
 1. The Chaos Mesh experiment was defined using the following YAML manifest:
-```
+```yaml
 kind: PodChaos
 apiVersion: chaos-mesh.org/v1alpha1
 metadata:
@@ -505,6 +505,81 @@ spec:
 This allowed us to observe system behavior during an unexpected crash and recovery of a critical component.
 
 
+Network Fault
+To simulate network issues and test the system's tolerance to latency, a Chaos Mesh experiment was conducted to inject network delay between the frontend and product-catalog components:
+
+1. The Chaos Mesh experiment was defined using the following YAML manifest:
+```yaml
+kind: NetworkChaos
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  namespace: default
+  name: network-fault-experiment
+  annotations:
+    experiment.chaos-mesh.org/pause: 'false'
+spec:
+  selector:
+    namespaces:
+      - default
+    labelSelectors:
+      app.kubernetes.io/component: frontend
+  mode: all
+  action: delay
+  duration: 10m
+  delay:
+    latency: 1000ms
+    correlation: '0'
+    jitter: 400ms
+  direction: both
+  target:
+    selector:
+      namespaces:
+        - default
+      labelSelectors:
+        app.kubernetes.io/component: product-catalog
+    mode: all
+```
+2. This experiment introduced artificial network latency of approximately 1 second (with jitter) in both directions for 10 minutes, between all frontend pods and product-catalog pods.
+
+
+
+
+---
+
+### 8.3 Execution procedure
+
+#### HTTP Fault Injection
+
+To test the system’s robustness against HTTP failures, a Chaos Mesh experiment was performed to abort HTTP responses on the checkout service:
+
+1. The Chaos Mesh experiment was defined using the following YAML manifest:
+
+```yaml
+kind: HTTPChaos
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  namespace: default
+  name: http-fault-experiment
+spec:
+  selector:
+    namespaces:
+      - default
+    labelSelectors:
+      app.kubernetes.io/component: checkout
+  mode: all
+  target: Response
+  abort: true
+  port: 8080
+  path: '*'
+  duration: 10m
+```
+
+2. The experiment caused HTTP responses from all checkout pods on port 8080 to be aborted (dropped) for a duration of 10 minutes, simulating service failure or network issues at the HTTP layer.
+
+
+
+
+
 ### 8.4 Results presentation
 #### Pod Failure
 
@@ -523,6 +598,56 @@ This experiment validated that the microservices system can gracefully recover f
 Pod Failure Error Span observed on recommendation service using Grafana
 
 [![Pod Failure error span](/docs/img/pod-kill-2.png)](/docs/img/pod-kill-2.png)
+
+---
+
+#### Network Fault
+
+The injected network latency between the frontend and product-catalog services caused observable performance degradation:
+
+1. Grafana dashboards showed increased response times on the frontend service, with latency spikes reaching approximately 1 second consistent with the injected delay.
+
+2. The error rate did not increase significantly, indicating that the system tolerated the latency but with slower responses.
+
+3. Trace spans between frontend and product-catalog services revealed increased duration for affected calls, confirming successful injection of delay.
+
+4. Other microservices not involved in this experiment maintained stable metrics, demonstrating that the fault was well isolated.
+
+This experiment confirmed that the system can continue operating under network delays, though with a performance impact visible at the user-facing frontend.
+
+[![Network Failure](/docs/img/network-fail.png)](/docs/img/network-fail.png)
+
+Network Failure Error Span observed on frontend service using Grafana
+
+[![Network Failure error span](/docs/img/network-fail-3.png)](/docs/img/network-fail-3.png)
+
+---
+
+#### HTTP Fault Injection
+
+The forced abortion of HTTP responses on the checkout service caused transient failures visible in monitoring:
+
+1. Grafana dashboards recorded a spike in HTTP error rates (5xx status codes) on the checkout service during the 10-minute fault period.
+
+2. Downstream services depending on checkout showed increased retries and error handling activity.
+
+3. Some user requests failed, leading to degraded user experience, but the system’s retry and fallback mechanisms mitigated the overall impact.
+
+4. After the fault duration ended, metrics normalized quickly, showing system recovery.
+
+This test demonstrated the importance of robust error handling in the face of HTTP-level failures and validated the resilience mechanisms implemented in the microservices.
+
+[![HTTP Failure](/docs/img/http-fail-2.png)](/docs/img/http-fail-2.png)
+
+Network Failure Error Span observed on checkout service using Grafana
+
+[![HTTP Failure error span](/docs/img/http-fail.png)](/docs/img/http-fail.png)
+
+---
+
+
+
+
 
 
 ## 9. Using AI in the project
