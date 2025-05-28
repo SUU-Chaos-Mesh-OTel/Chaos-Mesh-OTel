@@ -30,7 +30,7 @@
       - [Load Generator](#load-generator)  
       - [Online Boutique Microservices](#online-boutique-microservices)  
 5. [Environment configuration description](#5-environment-configuration-description)  
-6. [Installation method](#6-installation-method)  
+6. [Tools installation](#6-tools-installation)  
 7. [How to reproduce - step by step](#7-how-to-reproduce---step-by-step)  
    1. [Infrastructure as Code approach](#71-infrastructure-as-code-approach)  
 8. [Demo deployment steps](#8-demo-deployment-steps)  
@@ -274,8 +274,7 @@ The environment configuration combines Minikube (for local orchestration), Chaos
 
 This section describes the setup and configuration steps taken to prepare the experimental environment for Chaos Mesh experiments.
 
-## 6. Installation method
-
+## 6. Tools installation
 
 ### Minikube Setup
 
@@ -287,79 +286,63 @@ minikube start
 eval $(minikube docker-env)
 ```
 
-These steps enabled the use of Minikube's internal Docker daemon, allowing built images to be used directly by Kubernetes without pushing them to an external registry
+These steps enabled the use of Minikube's internal Docker daemon, allowing built images to be used directly by Kubernetes without pushing them to an external registry.
+
+### Helm setup
+
+```bash
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+```
+
+### Kubectl setup
+
+```bash
+curl -LO https://dl.k8s.io/release/v1.33.0/bin/linux/amd64/kubectl
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+```
 
 ### Chaos Mesh Installation
 
 To simulate failures, Chaos Mesh was installed using Helm:
-
-1. Install Helm:
-  ```
-  curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-  chmod 700 get_helm.sh
-  ./get_helm.sh
-  ```
-2. Add the Chaos Mesh Helm chart:
-```
+```bash
 helm repo add chaos-mesh https://charts.chaos-mesh.org
 ```
-3. Create a dedicated namespace and install Chaos Mesh:
-```
-kubectl create ns chaos-mesh
-helm install chaos-mesh chaos-mesh/chaos-mesh -n=chaos-mesh --set dashboard.securityMode=false --version 2.7.2
-
-```
-`securityMode=false` was used to disable the safe mode
-
-
-### Istio and Monitoring Setup
-
-To enable observability and traffic control, Istio was installed along with Grafana and Prometheus:
-
-Istio install:
-
-```
-curl -L https://istio.io/downloadIstio | sh -
-cd istio-1.26.0
-export PATH=$PWD/bin:$PATH
-stioctl manifest apply --set profile=demo
-```
-
-Enable automatic sidecar injection in the default namespace:
-
-```
-kubectl label namespace default istio-injection=enabled
-
-```
-
-To enable observability and traffic control, Istio was installed along with Grafana and Prometheus:
-```
-
-kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.21/samples/addons/grafana.yaml
-kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.21/samples/addons/prometheus.yaml
-```
-
-You can access the Grafana dashboard for monitoring with:
-```
-istioctl dashboard grafana
-
-```
-
-### Application Under Chaos Test
-
-To create a realistic microservices environment, the Google Cloud Microservices Demo was used:
-
-```
-git clone https://github.com/GoogleCloudPlatform/microservices-demo.git
-cd microservices-demo/release/
-kubectl apply -f kubernetes-manifests.yaml
-```
-
-This application includes multiple services (e.g., frontend, product catalog, cart service), which makes it a good target for chaos experiments.
-
-
 
 ## 7. How to reproduce - step by step
+
+### Start minikube cluster
+```bash
+minikube start --cpus=6 --memory=8192
+```
+
+### Deployment of example webservice with loadgenerator -- opentelemetry demo
+
+```bash
+helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+helm install my-otel-demo open-telemetry/opentelemetry-demo
+kubectl -n default port-forward svc/frontend-proxy 8080:8080
+```
+
+The following services are available at these paths after the frontend-proxy service is exposed with port forwarding:
+| Name               | URL                             |
+|--------------------|---------------------------------|
+| Webstore           | http://localhost:8080/          |
+| Jaeger UI          | http://localhost:8080/jaeger/ui/|
+| Grafana            | http://localhost:8080/grafana/  |
+| Load Generator UI  | http://localhost:8080/loadgen/  |
+| Feature Flags UI   | http://localhost:8080/feature/  |
+
+### Create a dedicated namespace and install Chaos Mesh:
+```bash
+kubectl create ns chaos-mesh
+helm install chaos-mesh chaos-mesh/chaos-mesh -n=chaos-mesh --set dashboard.securityMode=false --version 2.7.2
+kubectl port-forward -n chaos-mesh chaos-dashboard-6465b58bcc-vj4zt 8888:2333
+```
+`securityMode=false` was used to disable the safe mode.
+
+Chaos-dashboard is accessible at: http://localhost:8888/
 
 ### 7.1 Infrastructure as Code approach
 
