@@ -490,6 +490,8 @@ To simulate failure and test service resilience, a Chaos Mesh experiment was con
 
 This allowed us to observe system behavior during an unexpected crash and recovery of a critical component.
 
+[![Pod Failure](/docs/img/pod-kill.png)](/docs/img/pod-kill.png)
+
 ### 8.4 Results presentation
 #### Pod Failure
 
@@ -502,9 +504,6 @@ The impact of the pod failure was observed through the monitoring tools:
 3. The RESTARTS column in the kubectl output confirms that no other pods were restarted during this test, demonstrating localized failure handling.
 
 This experiment validated that the microservices system can gracefully recover from a failure in one of its components. Kubernetes' built-in self-healing mechanism ensured minimal disruption and full service recovery.
-
-[![Pod Failure](/docs/img/pod-kill.png)](/docs/img/pod-kill.png)
-
 
 [![Pod Failure error span](/docs/img/pod-kill-2.png)](/docs/img/pod-kill-2.png)
 
