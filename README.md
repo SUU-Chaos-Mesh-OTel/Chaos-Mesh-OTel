@@ -378,3 +378,11 @@ This application includes multiple services (e.g., frontend, product catalog, ca
 ## 10. Summary – conclusions
 
 ## 11. References
+
+- [Chaos Mesh Overview - official documentation](https://chaos-mesh.org/docs/)
+- [Hello Minikube - minikube tutorial](https://kubernetes.io/docs/tutorials/hello-minikube/)
+- [Helm documentation](https://helm.sh/docs/)
+- [Opentelemetry-Demo](https://github.com/open-telemetry/opentelemetry-demo)
+- [OpenTelemetry - Getting Started](https://opentelemetry.io/docs/platforms/kubernetes/getting-started)
+- [Simple OpenTelemetry setup in a Kubernetes environment](https://medium.com/incerto-technologies/simple-opentelemetry-setup-in-a-kubernetes-environment-aa7dc3e3fcf9)
+- [Set up OpenTelemetry Collector for Application Observability](https://grafana.com/docs/grafana-cloud/monitor-applications/application-observability/collector/opentelemetry-collector/)

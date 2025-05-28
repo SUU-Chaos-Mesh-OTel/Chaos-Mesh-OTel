@@ -1,0 +1,28 @@
+kind: NetworkChaos
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  namespace: default
+  name: network-fault-experiment
+  annotations:
+    experiment.chaos-mesh.org/pause: 'false'
+spec:
+  selector:
+    namespaces:
+      - default
+    labelSelectors:
+      app.kubernetes.io/component: frontend
+  mode: all
+  action: delay
+  duration: 10m
+  delay:
+    latency: 1000ms
+    correlation: '0'
+    jitter: 400ms
+  direction: both
+  target:
+    selector:
+      namespaces:
+        - default
+      labelSelectors:
+        app.kubernetes.io/component: product-catalog
+    mode: all
