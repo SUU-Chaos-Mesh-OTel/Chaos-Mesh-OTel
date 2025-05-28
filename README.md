@@ -472,12 +472,42 @@ This application includes multiple services (e.g., frontend, product catalog, ca
 ## 8. Demo deployment steps
 
 ### 8.1 Configuration set-up
-
+The system was deployed using a Kubernetes cluster. All microservices components (e.g., product-catalog, checkout, recommendation, flagd, etc.) were launched using kubectl. Observability was ensured via tools such as Grafana.
 ### 8.2 Data preparation
+To simulate realistic traffic, the load-generator component was used to continuously send requests to the services. Telemetry data including metrics, logs, and traces were collected in real time.
+
 
 ### 8.3 Execution procedure
+#### Pod Failure
+
+To simulate failure and test service resilience, a Chaos Mesh experiment was conducted. Specifically, the product-catalog pod was deliberately terminated via a pod-kill fault injection:
+
+1. The Chaos Mesh experiment was defined to target the product-catalog pod.
+
+2. The experiment forcibly terminated the pod at a specified time.
+
+3. Kubernetes automatically recreated the pod, as confirmed by the kubectl get pods output, which shows the pod had been restarted 43 seconds before the snapshot was taken.
+
+This allowed us to observe system behavior during an unexpected crash and recovery of a critical component.
 
 ### 8.4 Results presentation
+#### Pod Failure
+
+The impact of the pod failure was observed through the monitoring tools:
+
+1. Grafana (Error Rate by Span Name): During the restart of the product-catalog pod, the error rate for the get_product_list on recommendation service dashboard span spiked sharply, peaking at approximately 70% for 1 min. Once the pod was restored, the error rate returned to zero.
+
+2. Other spans such as /flagd.evaluation.v1.Service/EventStream and /ResolveBoolean remained unaffected, indicating that the failure was well isolated.
+
+3. The RESTARTS column in the kubectl output confirms that no other pods were restarted during this test, demonstrating localized failure handling.
+
+This experiment validated that the microservices system can gracefully recover from a failure in one of its components. Kubernetes' built-in self-healing mechanism ensured minimal disruption and full service recovery.
+
+[![Pod Failure](/docs/img/pod-kill.png)](/docs/img/pod-kill.png)
+
+
+[![Pod Failure error span](/docs/img/pod-kill2.png)](/docs/img/pod-kill2.png)
+
 
 ## 9. Using AI in the project
 
