@@ -506,7 +506,7 @@ This experiment validated that the microservices system can gracefully recover f
 [![Pod Failure](/docs/img/pod-kill.png)](/docs/img/pod-kill.png)
 
 
-[![Pod Failure error span](/docs/img/pod-kill2.png)](/docs/img/pod-kill2.png)
+[![Pod Failure error span](/docs/img/pod-kill2.png)](/docs/img/pod-kill-2.png)
 
 
 ## 9. Using AI in the project
