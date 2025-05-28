@@ -617,7 +617,7 @@ This experiment confirmed that the system can continue operating under network d
 
 [![Network Failure](/docs/img/network-fail.png)](/docs/img/network-fail.png)
 
-Network Failure Error Span observed on frontend service using Grafana
+Network Failure observed on frontend service using Grafana
 
 [![Network Failure error span](/docs/img/network-fail-3.png)](/docs/img/network-fail-3.png)
 
@@ -639,7 +639,7 @@ This test demonstrated the importance of robust error handling in the face of HT
 
 [![HTTP Failure](/docs/img/http-fail-2.png)](/docs/img/http-fail-2.png)
 
-Network Failure Error Span observed on checkout service using Grafana
+HTTP Failure observed on checkout service using Grafana
 
 [![HTTP Failure error span](/docs/img/http-fail.png)](/docs/img/http-fail.png)
 
