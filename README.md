@@ -452,6 +452,8 @@ Chaos-dashboard is accessible at: http://localhost:8888/
 
 ### 7.1 Infrastructure as Code approach
 
+To ensure a reproducible, scalable, and consistent deployment process, this project adopted an Infrastructure as Code (IaC) approach using Helm charts and declarative YAML manifests. The entire system—including the Kubernetes cluster, observability tools (Prometheus, Grafana), the OpenTelemetry Astronomy Shop microservices demo, and Chaos Mesh—was provisioned using version-controlled scripts and Helm-based installations. This allowed for automated setup of both infrastructure and application components across environments. The Helm charts for the OpenTelemetry demo and Chaos Mesh provided configurable parameters, making it easy to replicate experiments and modify system topology as needed. By storing all configuration files and Chaos experiment definitions in code, the project ensured repeatability.
+
 ## 8. Demo deployment steps
 
 ### 8.1 Configuration set-up
