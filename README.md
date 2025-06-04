@@ -661,6 +661,16 @@ Pod Failure Error Span observed on recommendation service using Grafana
 
 [![Pod Failure error span](/docs/img/pod-kill-2.png)](/docs/img/pod-kill-2.png)
 
+We also performed Trace measurements using Grafana. 
+
+Results before performing the experiment:
+
+[![Pod Failure error span](/docs/img/trace-pre-1.png)](/docs/img/trace-pre-1.png)
+
+Results after performing the experiment:
+
+[![Pod Failure error span](/docs/img/trace-post-1.png)](/docs/img/trace-post-1.png)
+
 ---
 
 #### Network Fault
