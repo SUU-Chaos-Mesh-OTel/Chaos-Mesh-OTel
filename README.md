@@ -28,7 +28,7 @@
       - [Prometheus](#prometheus)  
       - [Grafana](#grafana)  
       - [Load Generator](#load-generator)  
-      - [Online Boutique Microservices](#online-boutique-microservices)  
+      - [OpenTelemetry Demo Microservices](#opentelemetry-demo-microservices)  
 5. [Environment configuration description](#5-environment-configuration-description)  
 6. [Tools installation](#6-tools-installation)  
 7. [How to reproduce - step by step](#7-how-to-reproduce---step-by-step)  
@@ -135,7 +135,77 @@ The main objective is to analyze how each fault scenario affects the performance
 ## 4. Solution architecture
 
 ### 4.1 General Architecture
-[![General architecture](/docs/img/otel.png)](/docs/img/otel.png)
+```mermaid
+graph TD
+    classDef traffic fill:#cce5ff,stroke:#007bff,stroke-width:2px,color:#000;
+
+    EndUser["End User"]
+    subgraph "Traffic Sources"
+        LoadGen["Load Generator"]
+    end
+    class LoadGen traffic
+    class EndUser traffic
+
+    classDef app fill:#d4edda,stroke:#28a745,stroke-width:2px,color:#000;
+
+    subgraph "OpenTelemetry Demo App"
+        FrontProxy["Frontend Proxy"]
+        Frontend["Frontend"]
+        ProductCatalog["Product Catalog"]
+        Cart["Cart"]
+        Checkout["Checkout"]
+        Recommendation["Recommendation"]
+        Payment["Payment"]
+        Shipping["Shipping"]
+    end
+    class FrontProxy,Frontend,ProductCatalog,Cart,Checkout,Recommendation,Payment,Shipping app
+
+    LoadGen -->|"Synthetic traffic"| FrontProxy
+    FrontProxy -->|"gRPC/HTTP"| Frontend
+    Frontend --> ProductCatalog
+    Frontend --> Cart
+    Frontend --> Checkout
+    Frontend --> Recommendation
+    Checkout --> Payment
+    Checkout --> Shipping
+
+    classDef chaos fill:#f8d7da,stroke:#dc3545,stroke-width:2px,color:#000;
+
+    subgraph "Chaos Mesh Stack"
+        ChaosDash["Chaos Dashboard"]
+        ChaosMesh["Chaos Mesh"]
+    end
+    class ChaosDash,ChaosMesh chaos
+
+    ChaosDash --> ChaosMesh
+    ChaosMesh -->|"Pod Kill / Delay"| ProductCatalog
+    ChaosMesh -->|"HTTP Abort"| Checkout
+    ChaosMesh -->|"CPU Stress"| Recommendation
+
+    classDef observability fill:#fff3cd,stroke:#ffc107,stroke-width:2px,color:#000;
+
+    subgraph "Observability Stack"
+        OTelSDK["OTel SDK"]
+        Collector["OTel Collector"]
+        Prometheus["Prometheus"]
+        Grafana["Grafana"]
+        Jaeger["Jaeger"]
+    end
+    class OTelSDK,Collector,Prometheus,Grafana,Jaeger observability
+
+    ProductCatalog --> OTelSDK
+    Cart --> OTelSDK
+    Checkout --> OTelSDK
+    Recommendation --> OTelSDK
+    Payment --> OTelSDK
+    Shipping --> OTelSDK
+    OTelSDK -->|"OTLP export"| Collector
+    Collector -->|"Scrape"| Prometheus
+    Jaeger -->|"Data source"| Grafana
+    Prometheus -->|"Data source"| Grafana
+    Grafana -->|"Dashboards"| EndUser
+    Collector -->|"Traces"| Jaeger
+```
 
 The solution is designed to run in a **local Kubernetes cluster**, provisioned using **Minikube**, and integrates various components including microservices, observability tooling, and fault injection infrastructure. This architecture emulates a production-grade environment on a local machine for the purpose of experimentation, validation, and educational demonstration.
 
@@ -163,11 +233,18 @@ The core components of the architecture include:
 
 * Deployed into the Minikube cluster using Helm.
 * Includes a dashboard for visual scenario creation and a set of CRDs and controllers for fault injection.
-* Targets specific pods or services within Online Boutique for chaos experiments (e.g., network delays, pod terminations, CPU stress).
+* Targets specific pods or services within OTel Demo for chaos experiments (e.g., network delays, pod terminations, CPU stress).
+
+#### **OpenTelemetry Collector**
+
+* Deployed as a central telemetry pipeline in the cluster.  
+* Receives OTLP traces and metrics from all microservices.  
+* Exports metrics to Prometheus and traces to Jaeger.  
+* Decouples telemetry logic from applications, enabling consistent observability configuration.
 
 #### **Prometheus**
 
-* Automatically scrapes metrics from Online Boutique services and Chaos Mesh components.
+* Automatically scrapes metrics from OTel Demo services and Chaos Mesh components.
 * Stores time-series metrics for resource usage, HTTP/gRPC performance, error rates, etc.
 * Also collects Kubernetes-specific metrics (e.g., pod restarts, CPU usage).
 
@@ -435,10 +512,7 @@ The following services are available at these paths after the frontend-proxy ser
 | Name               | URL                             |
 |--------------------|---------------------------------|
 | Webstore           | http://localhost:8080/          |
-| Jaeger UI          | http://localhost:8080/jaeger/ui/|
 | Grafana            | http://localhost:8080/grafana/  |
-| Load Generator UI  | http://localhost:8080/loadgen/  |
-| Feature Flags UI   | http://localhost:8080/feature/  |
 
 ### Create a dedicated namespace and install Chaos Mesh:
 ```bash
@@ -583,6 +657,16 @@ This experiment validated that the microservices system can gracefully recover f
 Pod Failure Error Span observed on recommendation service using Grafana
 
 [![Pod Failure error span](/docs/img/pod-kill-2.png)](/docs/img/pod-kill-2.png)
+
+We also performed Trace measurements using Grafana. 
+
+Results before performing the experiment:
+
+[![Pod Failure error span](/docs/img/trace-pre-1.png)](/docs/img/trace-pre-1.png)
+
+Results after performing the experiment:
+
+[![Pod Failure error span](/docs/img/trace-post-1.png)](/docs/img/trace-post-1.png)
 
 ---
 
