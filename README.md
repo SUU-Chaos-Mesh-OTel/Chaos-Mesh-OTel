@@ -28,7 +28,7 @@
       - [Prometheus](#prometheus)  
       - [Grafana](#grafana)  
       - [Load Generator](#load-generator)  
-      - [Online Boutique Microservices](#online-boutique-microservices)  
+      - [OpenTelemetry Demo Microservices](#opentelemetry-demo-microservices)  
 5. [Environment configuration description](#5-environment-configuration-description)  
 6. [Tools installation](#6-tools-installation)  
 7. [How to reproduce - step by step](#7-how-to-reproduce---step-by-step)  
@@ -233,7 +233,7 @@ The core components of the architecture include:
 
 * Deployed into the Minikube cluster using Helm.
 * Includes a dashboard for visual scenario creation and a set of CRDs and controllers for fault injection.
-* Targets specific pods or services within Online Boutique for chaos experiments (e.g., network delays, pod terminations, CPU stress).
+* Targets specific pods or services within OTel Demo for chaos experiments (e.g., network delays, pod terminations, CPU stress).
 
 #### **OpenTelemetry Collector**
 
@@ -244,7 +244,7 @@ The core components of the architecture include:
 
 #### **Prometheus**
 
-* Automatically scrapes metrics from Online Boutique services and Chaos Mesh components.
+* Automatically scrapes metrics from OTel Demo services and Chaos Mesh components.
 * Stores time-series metrics for resource usage, HTTP/gRPC performance, error rates, etc.
 * Also collects Kubernetes-specific metrics (e.g., pod restarts, CPU usage).
 
