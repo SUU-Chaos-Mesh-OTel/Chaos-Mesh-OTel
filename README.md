@@ -512,10 +512,7 @@ The following services are available at these paths after the frontend-proxy ser
 | Name               | URL                             |
 |--------------------|---------------------------------|
 | Webstore           | http://localhost:8080/          |
-| Jaeger UI          | http://localhost:8080/jaeger/ui/|
 | Grafana            | http://localhost:8080/grafana/  |
-| Load Generator UI  | http://localhost:8080/loadgen/  |
-| Feature Flags UI   | http://localhost:8080/feature/  |
 
 ### Create a dedicated namespace and install Chaos Mesh:
 ```bash
